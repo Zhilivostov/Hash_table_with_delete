@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <unordered_map>
 #include "Strategy.h"
 
@@ -26,7 +26,6 @@ private:
 		using reference = typename HashTable::value_type&;
 
 		HashTableIter(HashTable& _parent, Iterator _it) : parent{ _parent }, iter{ _it } {}
-
 
 		HashTableIter& operator++ ()
 		{
@@ -63,6 +62,8 @@ private:
 
 	HashTableIter getIterator(const Key& key)
 	{
+		if (umap.find(key) == umap.end())
+			return HashTableIter(*this, umap.end());
 		return HashTableIter(*this, umap.find(key));
 	}
 
@@ -76,10 +77,20 @@ public:
 
 	std::pair<HashTableIter, bool> insert(const Key& key, const Value& val)
 	{
+		if (!strategy.insert(std::move(key)) || umap.find(key) != umap.end())
+		{
+			throw std::invalid_argument("Such Key is already exist!");
+		}
+		auto tmp_pair = umap.insert(std::make_pair(key, val));
+		return { HashTableIter(*this, tmp_pair.first), tmp_pair.second };
+	}
+
+	/*std::pair<HashTableIter, bool> insert(const Key& key, const Value& val)
+	{
 		if (umap.find(key) != umap.end())
 			throw std::invalid_argument("Such Key is already exist!");
 
-		bool success = strategy.insert(key);
+		bool success = strategy.insert(std::move(key)); ///5.
 		if (success)
 		{
 			std::pair<UmapIter, bool> tmp_pair = umap.insert(std::make_pair(key, val));
@@ -87,7 +98,7 @@ public:
 			return std::pair<HashTableIter, bool>(tmp, tmp_pair.second);
 		}
 		return std::pair<HashTableIter, bool>(getIterator(key), false);
-	}
+	}*/
 
 	size_t erase(const Key& key)
 	{
@@ -107,7 +118,7 @@ public:
 				strategy.erase(key);
 				erase(key);
 			}
-			bool success = strategy.insert(key);
+			bool success = strategy.insert(std::move(key)); ///5.
 			if (!success)
 			{
 				throw std::out_of_range("Can't insert the key");
@@ -116,7 +127,7 @@ public:
 		return umap[key];
 	}
 
-	Value& at(const Key& key) //��� const ��-�� erase
+	Value& at(const Key& key) //без const из-за erase
 	{
 		if (umap.find(key) == umap.end())
 			throw std::invalid_argument("Invalid key");
@@ -142,3 +153,47 @@ public:
 	}
 
 };
+
+
+//По второму блоку :
+//1. friend class HashTable; внутри HashTableIter, это может привести к путанице.Если HashTableIter не должен быть доступен другим классам, лучше убрать это объявление.Если доступ нужен только для HashTable, то лучше явно указать это в HashTable.
+//2. Метод getIterator должен проверять, существует ли ключ в umap, прежде чем возвращать итератор.Если ключ не найден, лучше вернуть итератор на end().
+//3.
+//
+//C++
+//std::pair<HashTableIter, bool> insert(const Key& key, const Value& val)
+//{
+//	if (!strategy.insert(key) || umap.find(key) != umap.end())
+//	{
+//		throw std::invalid_argument("Such Key is already exist!");
+//	}
+//	auto tmp_pair = umap.insert(std::make_pair(key, val));
+//	return { HashTableIter(*this, tmp_pair.first), tmp_pair.second };
+//}
+//
+//Лучше перепиши этод метод так.
+//4.
+//int hp - лучше size_t.
+//5.
+//
+//C++
+//bool insert(const Key & key) override
+//{
+//
+//}
+//
+//Хочу чтобы эти функции имели перегрузку :
+//
+//C
+//template <class Key>
+//bool insert(Key&& key) {
+//}
+//
+//Чтобы нормально обрабатывать rvalue ключи
+
+
+//1. 
+//2. вроде бы исправил, если правильно понял претензию.
+//3. переписано!
+//4. исправлено!
+//5. исправлено!

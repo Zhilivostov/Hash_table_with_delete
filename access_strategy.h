@@ -7,15 +7,15 @@ class AccessStrategy final : public Strategy<Key>
 {
 	using UMapIter = typename std::unordered_map<Key, int>::iterator;
 
-	int hp; //количество обращений
+	size_t hp; //количество обращений
 	std::unordered_map<Key, int> KeysAccess;
 
 public:
 	AccessStrategy(int _hp) : hp(_hp) {}
 
-	bool insert(const Key& key) override
+	bool insert(const Key&& key) override
 	{
-		std::pair<UMapIter, bool>tmp = KeysAccess.insert(std::pair<const Key, int>(key, 0));
+		std::pair<UMapIter, bool>tmp = KeysAccess.insert(std::pair<const Key, int>(std::move(key), 0));
 		return tmp.second;
 	}
 
