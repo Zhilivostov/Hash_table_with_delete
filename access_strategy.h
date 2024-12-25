@@ -13,7 +13,13 @@ class AccessStrategy final : public Strategy<Key>
 public:
 	AccessStrategy(int _hp) : hp(_hp) {}
 
-	bool insert(const Key&& key) override
+	bool insert(const Key& key) override
+	{
+		std::pair<UMapIter, bool>tmp = KeysAccess.insert(std::pair<const Key, int>(key, 0));
+		return tmp.second;
+	}
+
+	bool insert(Key&& key) override
 	{
 		std::pair<UMapIter, bool>tmp = KeysAccess.insert(std::pair<const Key, int>(std::move(key), 0));
 		return tmp.second;

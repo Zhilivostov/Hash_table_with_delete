@@ -14,7 +14,14 @@ class TimeStrategy final : public Strategy<Key>
 public:
 	TimeStrategy(std::time_t _timeout) : time(_timeout) {}
 	
-	bool insert(const Key&& key) override
+	bool insert(const Key& key) override
+	{
+		std::time_t currentTime = std::time(nullptr); //возвращает текущее время
+		std::pair<UMapIter, bool> tmp = KeysTime.insert(std::pair<const Key, std::time_t>(key, currentTime));
+		return tmp.second;
+	}
+
+	bool insert(Key&& key) override
 	{
 		std::time_t currentTime = std::time(nullptr); //возвращает текущее время
 		std::pair<UMapIter, bool> tmp = KeysTime.insert(std::pair<const Key, std::time_t>(std::move(key), currentTime));
